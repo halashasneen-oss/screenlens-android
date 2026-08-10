@@ -35,18 +35,27 @@ class FloatingLensService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(NOTIFICATION_ID, buildNotification(), foregroundServiceType())
+        startForegroundCompat()
         addBubble()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
-    private fun foregroundServiceType(): Int =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        } else {
-            0
+    /**
+     * The 3-arg startForeground(id, notification, type) overload only exists on API 29+,
+     * and FOREGROUND_SERVICE_TYPE_SPECIAL_USE is only defined (and meaningful) on API 34+ —
+     * passing it on 29-33 risks the OS rejecting an unrecognized type.
+     */
+    private fun startForegroundCompat() {
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ->
+                startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                startForeground(NOTIFICATION_ID, buildNotification(), 0)
+            else ->
+                startForeground(NOTIFICATION_ID, buildNotification())
         }
+    }
 
     private fun addBubble() {
         val wm = getSystemService(WINDOW_SERVICE) as WindowManager

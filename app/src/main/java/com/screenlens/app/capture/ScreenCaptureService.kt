@@ -58,18 +58,20 @@ class ScreenCaptureService : Service() {
             return START_NOT_STICKY
         }
 
-        startForeground(NOTIFICATION_ID, buildNotification(), foregroundServiceType())
+        startForegroundCompat()
         serviceScope.launch { CaptureResultBus.emit(CaptureEvent.Capturing) }
         beginCapture(resultCode, data)
         return START_NOT_STICKY
     }
 
-    private fun foregroundServiceType(): Int =
+    /** The 3-arg startForeground(id, notification, type) overload only exists on API 29+. */
+    private fun startForegroundCompat() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
         } else {
-            0
+            startForeground(NOTIFICATION_ID, buildNotification())
         }
+    }
 
     private fun beginCapture(resultCode: Int, data: Intent) {
         try {
