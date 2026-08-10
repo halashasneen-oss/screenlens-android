@@ -12,12 +12,12 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.io.File
 
 /**
- * JUnit doesn't guarantee method execution order, and DataStore's backing file
- * persists across @Test methods in this Robolectric setup, so each test must
- * start from a clean file rather than relying on being run first.
+ * JUnit doesn't guarantee method execution order, and AndroidX DataStore keeps a
+ * single cached instance per file for the life of the process — deleting the
+ * backing file on disk doesn't reset that cache, so each test clears state
+ * through the DataStore's own API instead.
  */
 @RunWith(RobolectricTestRunner::class)
 class SettingsDataStoreTest {
@@ -25,9 +25,8 @@ class SettingsDataStoreTest {
     private val settingsDataStore = SettingsDataStore(ApplicationProvider.getApplicationContext())
 
     @Before
-    fun clearPersistedSettings() {
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        File(context.filesDir, "datastore/screenlens_settings.preferences_pb").delete()
+    fun clearPersistedSettings() = runTest {
+        settingsDataStore.clearAll()
     }
 
     @Test

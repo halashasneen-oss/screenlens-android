@@ -67,4 +67,9 @@ class SettingsDataStore(private val context: Context) {
     suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { it[Keys.ONBOARDING_COMPLETED] = completed }
     }
+
+    /** Resets every setting back to its default. Used by tests to guarantee isolation. */
+    suspend fun clearAll() {
+        context.dataStore.edit { it.clear() }
+    }
 }
